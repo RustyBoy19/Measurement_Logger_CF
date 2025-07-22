@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Measurement Logger - Cal Flats</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #fff8c4;
+    }
+    .container {
+      background-color: #fff176;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .submit-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .submit-btn {
+      background-color: green;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .cancel-btn {
+      background-color: red !important;
+    }
+    #countdown {
+      font-weight: bold;
+      color: #444;
+    }
+    small {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.8em;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Enter Measurements - Cal Flats</h2>
+    <label>Applicator #:<br>
+      <select id="applicator">
+        <option value="">-- Select Applicator --</option>
+        <option value="1">Applicator 1</option>
+        <option value="2">Applicator 2</option>
+        <option value="3">Applicator 3</option>
+        <option value="4">Applicator 4</option>
+        <option value="5">Applicator 5</option>
+        <option value="6">Applicator 6</option>
+      </select><br><br>
+    </label>
+    <div id="measurements">
+      <label>M1: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m1" oninput="updateAverage()"></label><br>
+      <label>M2: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m2" oninput="updateAverage()"></label><br>
+      <label>M3: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m3" oninput="updateAverage()"></label><br>
+      <label>M4: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m4" oninput="updateAverage()"></label><br>
+      <label>M5: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m5" oninput="updateAverage()"></label><br>
+      <label>M6: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m6" oninput="updateAverage()"></label><br><br>
+    </div>
+    <p><strong>Average:</strong> <span id="averageDisplay">--</span></p>
+
+    <label for="notes">Notes (optional):</label><br>
+    <textarea id="notes" name="notes" rows="4" style="width: 100%;"></textarea><br><br>
+
+    <div class="submit-row">
+      <button id="submitBtn" class="submit-btn" onclick="prepareToSubmit()">Submit</button>
+      <span id="countdown"></span>
+    </div>
+    <p id="result"></p>
+  </div>
+  <small>This is for use of Pellucere Technologies - Cal Flats</small>
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz5SuGUjFNL2qgdHUXLxFokGk_d9MTN0tFtItJ4NZ-ugD7cbJdcY-qpqWixngJcrE1C/exec';
+
+    function updateAverage() {
+      const values = [];
+      for (let i = 1; i <= 6; i++) {
+        const val = parseFloat(document.getElementById('m' + i).value);
+        if (!isNaN(val)) values.push(val);
+      }
+      if (values.length > 0) {
+        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+        document.getElementById('averageDisplay').textContent = avg.toFixed(2);
+      } else {
+        document.getElementById('averageDisplay').textContent = "--";
+      }
+    }
+
+    let countdownTimer;
+    let secondsLeft = 3;
+    let isCounting = false;
+
+    function prepareToSubmit() {
+      if (isCounting) {
+        clearInterval(countdownTimer);
+        resetForm("Submit canceled.");
+        return;
+      }
+
+      const applicator = document.getElementById('applicator').value;
+      const values = [];
+      for (let i = 1; i <= 6; i++) {
+        values.push(parseFloat(document.getElementById('m' + i).value));
+      }
+
+      if (!applicator || values.some(isNaN)) {
+        document.getElementById('result').textContent = "Please fill in all fields.";
+        return;
+      }
+
+      isCounting = true;
+      secondsLeft = 3;
+      const countdownDisplay = document.getElementById('countdown');
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = "Cancel";
+      btn.classList.add("cancel-btn");
+
+      countdownDisplay.textContent = "Submitting in " + secondsLeft + "...";
+      countdownTimer = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+          clearInterval(countdownTimer);
+          submitData();
+        } else {
+          countdownDisplay.textContent = "Submitting in " + secondsLeft + "...";
+        }
+      }, 1000);
+    }
+
+    function resetForm(msg) {
+      document.getElementById('submitBtn').textContent = "Submit";
+      document.getElementById('submitBtn').classList.remove("cancel-btn");
+      document.getElementById('countdown').textContent = "";
+      document.getElementById('result').textContent = msg;
+      isCounting = false;
+    }
+
+    function submitData() {
+      const applicator = document.getElementById('applicator').value;
+      const values = [];
+      for (let i = 1; i <= 6; i++) {
+        values.push(parseFloat(document.getElementById('m' + i).value));
+      }
+      const nonEmpty = values.filter(v => !isNaN(v));
+      const avg = nonEmpty.reduce((a, b) => a + b, 0) / nonEmpty.length;
+      const notes = document.getElementById('notes').value;
+
+      const data = new URLSearchParams();
+      data.append("applicator", applicator);
+      for (let i = 0; i < 6; i++) {
+        data.append("m" + (i + 1), values[i]);
+      }
+      data.append("average", avg);
+      data.append("notes", notes);
+
+      fetch(scriptURL, {
+        method: 'POST',
+        body: data
+      })
+      .then(response => response.text())
+      .then(text => {
+        document.getElementById('result').textContent = "Submitted successfully. Avg: " + avg.toFixed(2);
+        resetForm("");
+        document.getElementById('applicator').value = "";
+        for (let i = 1; i <= 6; i++) {
+          document.getElementById('m' + i).value = "";
+        }
+        document.getElementById('notes').value = "";
+        document.getElementById('averageDisplay').textContent = "--";
+      })
+      .catch(error => {
+        document.getElementById('result').textContent = 'Error submitting data.';
+        console.error('Error:', error);
+        resetForm("");
+      });
+    }
+  </script>
+</body>
+</html>
