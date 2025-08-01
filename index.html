@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Measurement Logger - Cal Flats</title>
+  <title>Cal Flats Logger</title>
   <style>
     body {
       font-family: sans-serif;
@@ -49,41 +49,36 @@
 </head>
 <body>
   <div class="container">
-    <h2>Enter Measurements - Cal Flats</h2>
+    <h2>Cal Flats Measurements</h2>
     <label>Applicator #:<br>
       <select id="applicator">
         <option value="">-- Select Applicator --</option>
-        <option value="1">Applicator 1</option>
-        <option value="2">Applicator 2</option>
-        <option value="3">Applicator 3</option>
-        <option value="4">Applicator 4</option>
-        <option value="5">Applicator 5</option>
-        <option value="6">Applicator 6</option>
+        <option value="003">Applicator 003</option>
+<option value="004">Applicator 004</option>
+<option value="005">Applicator 005</option>
+<option value="006">Applicator 006</option>
+<option value="008">Applicator 008</option>
+<option value="011">Applicator 011</option>
       </select><br><br>
     </label>
     <div id="measurements">
-      <label>M1: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m1" oninput="updateAverage()"></label><br>
-      <label>M2: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m2" oninput="updateAverage()"></label><br>
-      <label>M3: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m3" oninput="updateAverage()"></label><br>
-      <label>M4: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m4" oninput="updateAverage()"></label><br>
-      <label>M5: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m5" oninput="updateAverage()"></label><br>
-      <label>M6: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m6" oninput="updateAverage()"></label><br><br>
+      <label>M1: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m1" oninput="updateAverage()"></label><br><label>M2: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m2" oninput="updateAverage()"></label><br><label>M3: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m3" oninput="updateAverage()"></label><br><label>M4: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m4" oninput="updateAverage()"></label><br><label>M5: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m5" oninput="updateAverage()"></label><br><label>M6: <input type="text" inputmode="numeric" pattern="[0-9]*" id="m6" oninput="updateAverage()"></label><br>
+      <br>
     </div>
     <p><strong>Average:</strong> <span id="averageDisplay">--</span></p>
-
-    <label for="notes">Notes (optional):</label><br>
-    <textarea id="notes" name="notes" rows="4" style="width: 100%;"></textarea><br><br>
-
+    <label>Notes:<br><textarea id="notes" rows="2" style="width: 100%;"></textarea></label><br><br>
     <div class="submit-row">
       <button id="submitBtn" class="submit-btn" onclick="prepareToSubmit()">Submit</button>
       <span id="countdown"></span>
     </div>
     <p id="result"></p>
   </div>
-  <small>This is for use of Pellucere Technologies - Cal Flats</small>
-
+  <small>This is for use of Pellucere Technologies</small>
   <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbz5SuGUjFNL2qgdHUXLxFokGk_d9MTN0tFtItJ4NZ-ugD7cbJdcY-qpqWixngJcrE1C/exec';
+    let countdownTimer;
+    let secondsLeft = 3;
+    let isCounting = false;
 
     function updateAverage() {
       const values = [];
@@ -99,10 +94,6 @@
       }
     }
 
-    let countdownTimer;
-    let secondsLeft = 3;
-    let isCounting = false;
-
     function prepareToSubmit() {
       if (isCounting) {
         clearInterval(countdownTimer);
@@ -115,7 +106,6 @@
       for (let i = 1; i <= 6; i++) {
         values.push(parseFloat(document.getElementById('m' + i).value));
       }
-
       if (!applicator || values.some(isNaN)) {
         document.getElementById('result').textContent = "Please fill in all fields.";
         return;
@@ -154,9 +144,9 @@
       for (let i = 1; i <= 6; i++) {
         values.push(parseFloat(document.getElementById('m' + i).value));
       }
+      const notes = document.getElementById('notes').value || "";
       const nonEmpty = values.filter(v => !isNaN(v));
       const avg = nonEmpty.reduce((a, b) => a + b, 0) / nonEmpty.length;
-      const notes = document.getElementById('notes').value;
 
       const data = new URLSearchParams();
       data.append("applicator", applicator);
